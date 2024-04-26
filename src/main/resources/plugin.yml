@@ -1,0 +1,4 @@
+name: kazbah
+version: '${project.version}'
+main: moe.oko.kazbah.Kazbah
+api-version: '1.20'
