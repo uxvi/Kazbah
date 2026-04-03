@@ -20,7 +20,6 @@ public final class Kazbah extends JavaPlugin implements Listener, KazbahAPI {
     public void onEnable() {
         this.dao = new DAO(this);
         this.saveDefaultConfig();
-        this.reloadConfig();
 
         // Register API service
         getServer().getServicesManager().register(KazbahAPI.class, this, this, ServicePriority.Normal);

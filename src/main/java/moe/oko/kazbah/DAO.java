@@ -30,14 +30,14 @@ public class DAO {
                     ByteArrayInputStream inventory = serializeItemArray(invSet.inventory());
                     ByteArrayInputStream armor = serializeItemArray(invSet.armor())) {
 
-                PreparedStatement ps = conn
-                        .prepareStatement("REPLACE INTO inventories(uuid, name, si, sa) VALUES (?, ?, ?, ?)");
-                ps.setString(1, uuid);
-                ps.setString(2, name);
-                ps.setBytes(3, inventory.readAllBytes());
-                ps.setBytes(4, armor.readAllBytes());
-                ps.execute();
-                ps.close();
+                try (PreparedStatement ps = conn
+                        .prepareStatement("REPLACE INTO inventories(uuid, name, si, sa) VALUES (?, ?, ?, ?)")) {
+                    ps.setString(1, uuid);
+                    ps.setString(2, name);
+                    ps.setBytes(3, inventory.readAllBytes());
+                    ps.setBytes(4, armor.readAllBytes());
+                    ps.execute();
+                }
 
                 updateInvCache(conn);
                 return true;
@@ -69,7 +69,7 @@ public class DAO {
     }
 
     protected List<String> getInvCatalog() {
-        return invCatalog;
+        return List.copyOf(invCatalog);
     }
 
     private InventorySet getInventory(String request) {
@@ -109,14 +109,6 @@ public class DAO {
         if (!dataFolder.exists())
             dataFolder.mkdirs();
 
-        File dbFile = new File(dataFolder, "data.db");
-        if (!dbFile.exists()) {
-            try {
-                dbFile.createNewFile();
-            } catch (IOException e) {
-                log.error("Unable to create DB file", e);
-            }
-        }
         String sql = "CREATE TABLE IF NOT EXISTS inventories(uuid TEXT, name TEXT UNIQUE, si BLOB, sa BLOB)";
         try (Connection conn = connect();
                 Statement stmt = conn.createStatement()) {
@@ -127,14 +119,9 @@ public class DAO {
         }
     }
 
-    private Connection connect() {
+    private Connection connect() throws SQLException {
         String url = "jdbc:sqlite:" + new File(plugin.getDataFolder(), "data.db").getAbsolutePath();
-        try {
-            return DriverManager.getConnection(url);
-        } catch (SQLException e) {
-            log.error("Unable to connect to DB!", e);
-            return null;
-        }
+        return DriverManager.getConnection(url);
     }
 
     private ByteArrayInputStream serializeItemArray(ItemStack[] items) throws IOException {

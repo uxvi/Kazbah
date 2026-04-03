@@ -54,12 +54,19 @@ public class Commands {
                     sender.sendMessage(mm.deserialize("<red>Unable to find inventory</red>"));
                     return;
                 }
+                boolean full = false;
                 for (ItemStack item : result.inventory()) {
-                    if (item != null)
-                        sender.getInventory().addItem(item);
+                    if (item != null && !full) {
+                        if (!sender.getInventory().addItem(item).isEmpty()) {
+                            full = true;
+                        }
+                    }
                 }
                 sender.sendMessage(mm
                         .deserialize("<green>Added items from inventory</green> <white>%s</white>".formatted(request)));
+                if (full) {
+                    sender.sendMessage(mm.deserialize("<yellow>Inventory full; some items were omitted.</yellow>"));
+                }
             });
         });
     }
@@ -86,6 +93,6 @@ public class Commands {
             return;
         }
         String list = String.join(", ", catalog);
-        sender.sendMessage(mm.deserialize("<gold>Saved inventories:</gold> <white>" + list + "</white>"));
+        sender.sendMessage(mm.deserialize("<gold>Saved inventories:</gold> <white>" + mm.escapeTags(list) + "</white>"));
     }
 }
